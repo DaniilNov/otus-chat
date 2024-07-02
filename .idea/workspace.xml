@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c9179a65-76da-427c-a06c-058b82b1bf8a" name="Changes" comment="master branch commit">
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/ru/otus/java/basic/Client.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/ru/otus/java/basic/ClientApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ServerApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="c9179a65-76da-427c-a06c-058b82b1bf8a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,7 +127,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1719908176695</updated>
-      <workItem from="1719908177822" duration="1765000" />
+      <workItem from="1719908177822" duration="3286000" />
     </task>
     <task id="LOCAL-00001" summary="master branch commit">
       <option name="closed" value="true" />
@@ -141,7 +137,15 @@
       <option name="project" value="LOCAL" />
       <updated>1719909096404</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Homework fifteen basic implementation">
+      <option name="closed" value="true" />
+      <created>1719910070157</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1719910070157</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -150,6 +154,41 @@
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="master branch commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="master branch commit" />
+    <MESSAGE value="Homework fifteen basic implementation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Homework fifteen basic implementation" />
+  </component>
+  <component name="com.github.evgenys91.machinet.common.dslhistory.DslHistoryState">
+    <option name="historyDtoById">
+      <map>
+        <entry key="562609">
+          <value>
+            <ChatHistoryModel>
+              <option name="contextFilesPaths">
+                <list>
+                  <option value="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" />
+                  <option value="$PROJECT_DIR$/client/src/main/java/ru/otus/java/basic/Client.java" />
+                  <option value="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" />
+                </list>
+              </option>
+              <option name="id" value="562609" />
+              <option name="initiateTms" value="1719910267003" />
+              <option name="request" value=" Реализуйте возможность отправки личных сообщений: если клиент пишет «/w tom Hello», то сообщение Hello должно быть отправлено только клиенту с ником tom" />
+              <option name="response" value="" />
+              <option name="responseDescription" value="Для реализации возможности отправки личных сообщений, необходимо внести изменения в классы `ClientHandler` и `Server`. Мы добавим метод для отправки личных сообщений в `Server` и изменим обработку сообщений в `ClientHandler`.&#10;&#10;### Изменения в `Server.java`&#10;&#10;Добавим метод `sendPrivateMessage` для отправки личных сообщений:&#10;&#10;```java&#10;public class Server {&#10;    private int port;&#10;    private List&lt;ClientHandler&gt; clients;&#10;&#10;    public Server(int port) {&#10;        this.port = port;&#10;        this.clients = new ArrayList&lt;&gt;();&#10;    }&#10;&#10;    public void start() {&#10;        try (ServerSocket serverSocket = new ServerSocket(port)) {&#10;            System.out.println(&quot;Сервер запущен на порту: &quot; + port);&#10;            while (true) {&#10;                Socket socket = serverSocket.accept();&#10;                subscribe(new ClientHandler(this, socket));&#10;            }&#10;        } catch (Exception e) {&#10;            e.printStackTrace();&#10;        }&#10;    }&#10;&#10;    public synchronized void subscribe(ClientHandler clientHandler) {&#10;        broadcastMessage(&quot;В чат зашел: &quot; + clientHandler.getUsername());&#10;        clients.add(clientHandler);&#10;    }&#10;&#10;    public synchronized void unsubscribe(ClientHandler clientHandler) {&#10;        clients.remove(clientHandler);&#10;        broadcastMessage(&quot;Из чата вышел: &quot; + clientHandler.getUsername());&#10;    }&#10;&#10;    public synchronized void broadcastMessage(String message) {&#10;        for (ClientHandler c : clients) {&#10;            c.sendMessage(message);&#10;        }&#10;    }&#10;&#10;    public synchronized void sendPrivateMessage(String recipientUsername, String message) {&#10;        for (ClientHandler client : clients) {&#10;            if (client.getUsername().equals(recipientUsername)) {&#10;                client.sendMessage(message);&#10;                break;&#10;            }&#10;        }&#10;    }&#10;}&#10;```&#10;&#10;### Изменения в `ClientHandler.java`&#10;&#10;Изменим обработку сообщений, чтобы поддерживать отправку личных сообщений:&#10;&#10;```java&#10;package ru.otus.java.basic;&#10;&#10;import java.io.DataInputStream;&#10;import java.io.DataOutputStream;&#10;import java.io.IOException;&#10;import java.net.Socket;&#10;&#10;public class ClientHandler {&#10;    private Server server;&#10;    private Socket socket;&#10;    private DataInputStream in;&#10;    private DataOutputStream out;&#10;&#10;    private String username;&#10;&#10;    private static int usersCount = 0;&#10;&#10;    public String getUsername() {&#10;        return username;&#10;    }&#10;&#10;    public ClientHandler(Server server, Socket socket) throws IOException {&#10;        this.server = server;&#10;        this.socket = socket;&#10;        this.in = new DataInputStream(socket.getInputStream());&#10;        this.out = new DataOutputStream(socket.getOutputStream());&#10;        usersCount++;&#10;        this.username = &quot;user&quot; + usersCount;&#10;        new Thread(() -&gt; {&#10;            try {&#10;                System.out.println(&quot;Подключился новый клиент&quot;);&#10;                while (true) {&#10;                    String message = in.readUTF();&#10;                    if (message.startsWith(&quot;/&quot;)) {&#10;                        if (message.equals(&quot;/exit&quot;)) {&#10;                            sendMessage(&quot;/exitok&quot;);&#10;                            break;&#10;                        } else if (message.startsWith(&quot;/w &quot;)) {&#10;                            String[] parts = message.split(&quot; &quot;, 3);&#10;                            if (parts.length == 3) {&#10;                                String recipient = parts[1];&#10;                                String privateMessage = parts[2];&#10;                                server.sendPrivateMessage(recipient, username + &quot; (личное сообщение): &quot; + privateMessage);&#10;                            } else {&#10;                                sendMessage(&quot;Неправильный формат личного сообщения. Используйте: /w &lt;username&gt; &lt;message&gt;&quot;);&#10;                            }&#10;                        }&#10;                        continue;&#10;                    }&#10;                    server.broadcastMessage(username + &quot;: &quot; + message);&#10;                }&#10;            } catch (IOException e) {&#10;                e.printStackTrace();&#10;            } finally {&#10;                disconnect();&#10;            }&#10;        }).start();&#10;    }&#10;&#10;    public void sendMessage(String message) {&#10;        try {&#10;            out.writeUTF(message);&#10;        } catch (IOException e) {&#10;            e.printStackTrace();&#10;        }&#10;    }&#10;&#10;    public void disconnect() {&#10;        server.unsubscribe(this);&#10;        try {&#10;            if (in != null) {&#10;                in.close();&#10;            }&#10;        } catch (IOException e) {&#10;            e.printStackTrace();&#10;        }&#10;        try {&#10;            if (out != null) {&#10;                out.close();&#10;            }&#10;        } catch (IOException e) {&#10;            e.printStackTrace();&#10;        }&#10;        try {&#10;            if (socket != null) {&#10;                socket.close();&#10;            }&#10;        } catch (IOException e) {&#10;            e.printStackTrace();&#10;        }&#10;    }&#10;}&#10;```&#10;&#10;Теперь, если клиент отправит сообщение в формате `/w &lt;username&gt; &lt;message&gt;`, оно будет доставлено только указанному пользователю." />
+              <option name="responseFileName" value="" />
+              <option name="responseFilePath" value="" />
+              <option name="responseTms" value="1719910288608" />
+              <option name="usedLocalFilePaths">
+                <list>
+                  <option value="$PROJECT_DIR$/client/src/main/java/ru/otus/java/basic/Client.java" />
+                  <option value="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" />
+                  <option value="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" />
+                </list>
+              </option>
+            </ChatHistoryModel>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

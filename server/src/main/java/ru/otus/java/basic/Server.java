@@ -41,5 +41,14 @@ public class Server {
             c.sendMessage(message);
         }
     }
+
+    public synchronized void sendPrivateMessage(String recipientUsername, String message) {
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(recipientUsername)) {
+                client.sendMessage(message);
+                break;
+            }
+        }
+    }
 }
 
