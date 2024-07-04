@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c9179a65-76da-427c-a06c-058b82b1bf8a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/AuthenticationProvider.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/InMemoryAuthenticationProvider.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Role.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/ru/otus/java/basic/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/ru/otus/java/basic/Client.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/ClientHandler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/ru/otus/java/basic/Server.java" afterDir="false" />
     </list>
@@ -115,6 +111,9 @@
       <list>
         <item itemvalue="Application.ClientApplication" />
         <item itemvalue="Application.ServerApplication" />
+        <item itemvalue="Application.ServerApplication" />
+        <item itemvalue="Application.ClientApplication" />
+        <item itemvalue="Application.ClientApplication" />
       </list>
     </recent_temporary>
   </component>

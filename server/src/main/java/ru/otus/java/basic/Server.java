@@ -58,6 +58,15 @@ public class Server {
         return false;
     }
 
+    public synchronized void sendPrivateMessage(String recipientUsername, String message) {
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(recipientUsername)) {
+                client.sendMessage(message);
+                break;
+            }
+        }
+    }
+
     public synchronized void kickUser(String username) {
         for (ClientHandler client : clients) {
             if (client.getUsername().equals(username)) {
