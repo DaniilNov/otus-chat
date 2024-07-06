@@ -1,29 +1,33 @@
 package ru.otus.java.basic;
 
+import ru.otus.java.basic.service.UserService;
+import ru.otus.java.basic.service.UserServiceJdbcImpl;
+
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
     private int port;
     private List<ClientHandler> clients;
-    private AuthenticationProvider authenticationProvider;
+    private UserService userService;
 
-    public AuthenticationProvider getAuthenticationProvider() {
-        return authenticationProvider;
+    public UserService getUserService() {
+        return userService;
     }
 
-    public Server(int port) {
+    public Server(int port) throws SQLException {
         this.port = port;
         this.clients = new ArrayList<>();
-        this.authenticationProvider = new InMemoryAuthenticationProvider(this);
+        this.userService = new UserServiceJdbcImpl(this);
     }
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Сервер запущен на порту: " + port);
-            authenticationProvider.initialize();
+            userService.initialize();
             while (true) {
                 Socket socket = serverSocket.accept();
                 new ClientHandler(this, socket);
