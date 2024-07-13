@@ -1,5 +1,7 @@
 package ru.otus.java.basic;
 
+import ru.otus.java.basic.model.Role;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -40,7 +42,7 @@ public class ClientHandler {
                             sendMessage("Неверный формат команды /auth");
                             continue;
                         }
-                        if (server.getAuthenticationProvider().authenticate(this, elements[1], elements[2])) {
+                        if (server.getUserService().authenticate(this, elements[1], elements[2])) {
                             break;
                         }
                         continue;
@@ -51,7 +53,7 @@ public class ClientHandler {
                             sendMessage("Неверный формат команды /register");
                             continue;
                         }
-                        if (server.getAuthenticationProvider().registration(this, elements[1], elements[2], elements[3])) {
+                        if (server.getUserService().registration(this, elements[1], elements[2], elements[3])) {
                             break;
                         }
                         continue;
@@ -77,8 +79,8 @@ public class ClientHandler {
                             String[] parts = message.split(" ", 2);
                             if (parts.length == 2) {
                                 String userToKick = parts[1];
-                                Role role = server.getAuthenticationProvider().getUserRole(username);
-                                if (Role.ADMIN.equals(role)) {
+                                Role role = server.getUserService().getUserRole(username);
+                                if ("ADMIN".equals(role.getName())) {
                                     server.kickUser(userToKick);
                                 } else {
                                     sendMessage("У вас нет прав для выполнения этой команды.");
