@@ -2,6 +2,7 @@ package ru.otus.java.basic.service;
 
 import ru.otus.java.basic.ClientHandler;
 import ru.otus.java.basic.Server;
+import ru.otus.java.basic.model.Ban;
 import ru.otus.java.basic.model.Role;
 import ru.otus.java.basic.model.User;
 
@@ -11,6 +12,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -35,6 +38,16 @@ public class UserServiceJdbcImpl implements UserService {
             join chat.users_to_roles ur ON r.id = ur.role_id
             WHERE user_id = ? and r.name = 'ADMIN'
             """;
+
+    private static final String BAN_USER_QUERY = """
+                INSERT INTO chat.bans (user_id, ban_end_time)
+                VALUES (?, ?)
+                ON CONFLICT (user_id)
+                DO UPDATE SET ban_end_time = EXCLUDED.ban_end_time
+            """;
+    private static final String CHECK_BAN_QUERY = "SELECT ban_end_time FROM chat.bans WHERE user_id = ?";
+
+    private static final String CHANGE_USERNAME_QUERY = "UPDATE chat.users SET username = ? WHERE username = ?";
 
     private final Connection connection;
     private Server server;
@@ -196,7 +209,8 @@ public class UserServiceJdbcImpl implements UserService {
         return false;
     }
 
-    private boolean isUsernameAlreadyExist(String username) {
+    @Override
+    public boolean isUsernameAlreadyExist(String username) {
         for (User u : getAll()) {
             if (u.getUsername().equals(username)) {
                 return true;
@@ -225,6 +239,70 @@ public class UserServiceJdbcImpl implements UserService {
             }
         } catch (SQLException ex) {
             throw new RuntimeException("Ошибка при создании пользователя", ex);
+        }
+    }
+
+    @Override
+    public void banUser(String username, long durationInMinutes) {
+        int userId = getUserIdByUsername(username);
+        if (userId == -1) {
+            throw new IllegalArgumentException("Пользователь не найден");
+        }
+
+        LocalDateTime banEndTime = durationInMinutes > 0 ? LocalDateTime.now().plusMinutes(durationInMinutes)
+                : LocalDateTime.of(9999, 12, 31, 23, 59, 59);
+        Ban ban = new Ban(userId, banEndTime);
+        System.out.println("Блокировка пользователя: " + ban); // Отладочное сообщение
+
+        try (PreparedStatement ps = connection.prepareStatement(BAN_USER_QUERY)) {
+            ps.setInt(1, ban.getUserId());
+            ps.setTimestamp(2, Timestamp.valueOf(ban.getBanEndTime()));
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new RuntimeException("Ошибка при блокировке пользователя", ex);
+        }
+    }
+
+    @Override
+    public boolean isUserBanned(String username) {
+        int userId = getUserIdByUsername(username);
+        if (userId == -1) {
+            return false;
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(CHECK_BAN_QUERY)) {
+            ps.setInt(1, userId);
+            try (ResultSet resultSet = ps.executeQuery()) {
+                if (resultSet.next()) {
+                    Timestamp banEndTime = resultSet.getTimestamp(1);
+                    if (banEndTime != null && banEndTime.toLocalDateTime().isAfter(LocalDateTime.now())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException("Ошибка при проверке блокировки пользователя", ex);
+        }
+        return false;
+    }
+
+    private int getUserIdByUsername(String username) {
+        for (User user : getAll()) {
+            if (user.getUsername().equals(username)) {
+                return user.getId();
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public void changeUsername(String oldUsername, String newUsername) {
+        try (PreparedStatement ps = connection.prepareStatement(CHANGE_USERNAME_QUERY)) {
+            ps.setString(1, newUsername);
+            ps.setString(2, oldUsername);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new RuntimeException("Ошибка при изменении имени пользователя", ex);
         }
     }
 }

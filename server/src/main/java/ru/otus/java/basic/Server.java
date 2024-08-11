@@ -6,13 +6,19 @@ import ru.otus.java.basic.service.UserServiceJdbcImpl;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public class Server {
     private int port;
     private List<ClientHandler> clients;
     private UserService userService;
+    private boolean running;
+
 
     public UserService getUserService() {
         return userService;
@@ -22,6 +28,7 @@ public class Server {
         this.port = port;
         this.clients = new ArrayList<>();
         this.userService = new UserServiceJdbcImpl(this);
+        this.running = true;
     }
 
     public void start() {
@@ -48,8 +55,10 @@ public class Server {
     }
 
     public synchronized void broadcastMessage(String message) {
+        String timestampedMessage = "[" + LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "] " + message;
         for (ClientHandler c : clients) {
-            c.sendMessage(message);
+            c.sendMessage(timestampedMessage);
         }
     }
 
@@ -80,4 +89,25 @@ public class Server {
             }
         }
     }
+
+    public synchronized void shutdown() {
+        running = false;
+        List<ClientHandler> clientsCopy = new ArrayList<>(clients);
+        for (ClientHandler client : clientsCopy) {
+            client.sendMessage("Сервер остановлен.");
+            client.disconnect();
+        }
+        try {
+            if (userService != null) {
+                userService.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Сервер остановлен.");
+        System.exit(0);
+    }
+
+    public synchronized List<String> getActiveClients() {
+        return clients.stream().map(ClientHandler::getUsername).collect(toList());    }
 }

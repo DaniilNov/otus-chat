@@ -6,6 +6,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ClientHandler {
     private Server server;
@@ -13,6 +16,8 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private String username;
+    private LocalDateTime lastActivityTime;
+    private Timer inactivityTimer;
 
     public String getUsername() {
         return username;
@@ -27,10 +32,15 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
+        this.lastActivityTime = LocalDateTime.now();
+        this.inactivityTimer = new Timer(true);
+        startInactivityTimer();
+
         new Thread(() -> {
             try {
                 System.out.println("Подключился новый клиент");
                 while (true) {
+                    lastActivityTime = LocalDateTime.now();
                     String message = in.readUTF();
                     if (message.equals("/exit")) {
                         sendMessage("/exitok");
@@ -62,6 +72,11 @@ public class ClientHandler {
                 }
                 while (true) {
                     String message = in.readUTF();
+                    lastActivityTime = LocalDateTime.now();
+                    if (server.getUserService().isUserBanned(username)) {
+                        sendMessage("Вы забанены и не можете отправлять сообщения.");
+                        continue;
+                    }
                     if (message.startsWith("/")) {
                         if (message.equals("/exit")) {
                             sendMessage("/exitok");
@@ -88,6 +103,46 @@ public class ClientHandler {
                             } else {
                                 sendMessage("Неправильный формат команды. Используйте: /kick <username>");
                             }
+                        } else if (message.equals("/activelist")) {
+                            sendMessage("Активные пользователи: " + String.join(", ", server.getActiveClients()));
+                        } else if (message.startsWith("/ban ")) {
+                            String[] parts = message.split(" ", 3);
+                            if (parts.length >= 2) {
+                                String userToBan = parts[1];
+                                Role role = server.getUserService().getUserRole(username);
+                                if ("ADMIN".equals(role.getName())) {
+                                    long banDuration = parts.length == 3 ? Long.parseLong(parts[2]) : -1;
+                                    server.getUserService().banUser(userToBan, banDuration);
+                                } else {
+                                    sendMessage("У вас нет прав для выполнения этой команды.");
+                                }
+                            } else {
+                                sendMessage("Неправильный формат команды. Используйте: /ban <username> [duration_in_minutes]");
+                            }
+                        } else if (message.equals("/shutdown")) {
+                            Role role = server.getUserService().getUserRole(username);
+                            if ("ADMIN".equals(role.getName())) {
+                                server.shutdown();
+                            } else {
+                                sendMessage("У вас нет прав для выполнения этой команды.");
+                            }
+                        }
+                        else if (message.startsWith("/changenick ")) {
+                            String[] parts = message.split(" ", 2);
+                            if (parts.length == 2) {
+                                String newUsername = parts[1];
+                                if (server.getUserService().isUsernameAlreadyExist(newUsername)) {
+                                    sendMessage("Имя пользователя уже занято.");
+                                } else {
+                                    String oldUsername = username;
+                                    server.getUserService().changeUsername(oldUsername, newUsername);
+                                    setUsername(newUsername);
+                                    sendMessage("Ваше имя пользователя изменено на: " + newUsername);
+                                    server.broadcastMessage(oldUsername + " изменил имя на " + newUsername);
+                                }
+                            } else {
+                                sendMessage("Неправильный формат команды. Используйте: /changenick <new_username>");
+                            }
                         }
                         continue;
                     }
@@ -103,6 +158,7 @@ public class ClientHandler {
 
     public void sendMessage(String message) {
         try {
+            System.out.println("Отправка сообщения: " + message);
             out.writeUTF(message);
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,5 +188,17 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void startInactivityTimer() {
+        inactivityTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (LocalDateTime.now().minusMinutes(20).isAfter(lastActivityTime)) {
+                    sendMessage("Вы были отключены из-за неактивности.");
+                    disconnect();
+                }
+            }
+        }, 0, 60 * 1000);
     }
 }

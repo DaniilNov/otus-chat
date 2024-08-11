@@ -21,4 +21,11 @@ public interface UserService extends AutoCloseable {
 
     Role getUserRole(String username);
 
+    void banUser(String userToBan, long banDuration);
+
+    boolean isUserBanned(String username);
+
+    void changeUsername(String oldUsername, String newUsername);
+
+    boolean isUsernameAlreadyExist(String username);
 }
